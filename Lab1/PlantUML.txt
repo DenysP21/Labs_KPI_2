@@ -1,0 +1,95 @@
+@startuml
+
+hide circle
+skinparam linetype ortho
+
+entity Category {
+    * category_id
+    --
+    category_name
+}
+
+entity Publisher {
+    * pub_id
+    --
+    name
+    address
+}
+
+entity Book {
+    * book_id
+    --
+    title
+    publication_year
+    copies_available
+    --
+    category_id (FK)
+    pub_id (FK)
+}
+
+entity Author {
+    * author_id
+    --
+    name
+    surname
+    birth_year
+    country
+}
+
+entity AuthorBook {
+    * author_id (FK)
+    * book_id (FK)
+}
+
+entity Member {
+    * member_id
+    --
+    name
+    surname
+    address
+    phone_number
+    registration_date
+}
+
+entity Librarian {
+    * librarian_id
+    --
+    name
+    surname
+    position
+    department
+    email
+}
+
+entity Loan {
+    * loan_id
+    --
+    loan_date
+    return_date
+    status
+    --
+    member_id (FK)
+    book_id (FK)
+    librarian_id (FK)
+}
+
+entity Fine {
+    * fine_id
+    --
+    amount
+    status
+    --
+    loan_id (FK)
+}
+
+
+Category "1" ||--o{ "0..N" Book : belongs to
+Publisher "1" ||--|{ "1..N" Book : published
+Book "1" ||--|{ "1..N" AuthorBook : has
+Author "1" ||--|{ "1..N" AuthorBook : has
+Member "1" ||--o{ "0..N" Loan : takes
+Librarian "1" ||--o{ "0..N" Loan : issued by
+Book "1" ||--o{ "0..N" Loan : used_in
+Loan "1" ||--o{ "0..N" Fine : may contain
+
+@enduml
