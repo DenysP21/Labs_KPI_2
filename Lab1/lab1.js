@@ -23,11 +23,10 @@ class Publisher {
 }
 
 class Book {
-  constructor(title, publicationYear, copiesAvailable, categoryId, pubId) {
+  constructor(title, publicationYear, categoryId, pubId) {
     this.bookId = idForBook++;
     this.title = title;
     this.publicationYear = publicationYear;
-    this.copiesAvailable = copiesAvailable;
     this.categoryId = categoryId;
     this.pubId = pubId;
     this.authorBooks = [];
@@ -37,10 +36,6 @@ class Book {
     const authorBook = new AuthorBook(authorId, this.bookId);
     this.authorBooks.push(authorBook);
     return authorBook;
-  }
-
-  updateCopies(quantity) {
-    this.copiesAvailable += quantity;
   }
 }
 
@@ -134,7 +129,6 @@ const publisher = new Publisher("BookHouse", "123 Main St");
 const book = new Book(
   "The Great Novel",
   2020,
-  5,
   category.categoryId,
   publisher.pubId
 );

@@ -21,7 +21,6 @@ entity Book {
     --
     title
     publication_year
-    copies_available
     --
     category_id (FK)
     pub_id (FK)
