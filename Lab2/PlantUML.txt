@@ -1,0 +1,64 @@
+@startuml
+left to right direction
+
+actor Member
+actor Librarian
+actor "External payment system" as EPS
+actor "Notification service" as NS
+
+' === Member Use Cases ===
+usecase "Catalog view" as UC_Catalog
+usecase "Book search" as UC_Search
+usecase "Book reservation" as UC_Reserve
+usecase "View loan status or fines" as UC_Status
+usecase "Payment of a fine" as UC_PayFine
+
+' === Shared Use Cases ===
+usecase "Authentication" as UC_Auth
+
+' === Payment Processing ===
+usecase "Payment processing" as UC_Payment
+
+' === Librarian Use Cases ===
+usecase "New member registration" as UC_Register
+usecase "Member status check" as UC_MemberStatus
+usecase "Book issuance" as UC_Issuance
+usecase "Book reception (return operation)" as UC_Reception
+usecase "Data management" as UC_Data
+usecase "Account management" as UC_Account
+usecase "Report generation" as UC_Report
+
+' === Notification / Penalty ===
+usecase "Penalty assessment" as UC_Penalty
+
+' === Associations ===
+Member --> UC_Catalog 
+Member --> UC_Search
+Member --> UC_Reserve
+Member --> UC_Status
+Member --> UC_PayFine
+
+
+EPS --> UC_Payment
+UC_Payment ..> UC_PayFine : <<use>>
+
+Librarian --> UC_Register
+Librarian --> UC_Issuance
+Librarian --> UC_Reception
+Librarian --> UC_Data
+Librarian --> UC_Account
+Librarian --> UC_Report
+Librarian --> UC_Auth
+
+NS --> UC_Penalty
+
+' === Includes / Extends Relationships ===
+UC_Reserve --> UC_Search : <<extends>>
+UC_Penalty --> UC_Reception : <<extends>>
+
+UC_Reserve ..> UC_Auth : <<use>>
+UC_Status ..> UC_Auth : <<use>>
+UC_Reception ..> UC_MemberStatus : <<use>>
+UC_Issuance ..> UC_Auth : <<use>>
+
+@enduml
