@@ -1,46 +1,59 @@
 @startuml
+' --- Налаштування стилю ---
+skinparam actorStyle awesome
+skinparam useCase {
+    BackgroundColor #LightCyan
+    BorderColor #DarkBlue
+    ArrowColor #DarkBlue
+    ActorBorderColor #DarkSlateGray
+}
+skinparam package {
+    BackgroundColor #F8F8F8
+    BorderColor #Gray
+}
+
 left to right direction
 
-actor Member
-actor Librarian
-actor "External payment system" as EPS
-actor "Notification service" as NS
+' --- Актори ---
+actor "Користувач" as User <<abstract>>
+actor "Читач" as Member
+actor "Бібліотекар" as Librarian
+actor "Платіжна Система" as EPS <<system>>
+actor "Сервіс Сповіщень" as NS <<system>>
 
-' === Member Use Cases ===
-usecase "Catalog view" as UC_Catalog
-usecase "Book search" as UC_Search
-usecase "Book reservation" as UC_Reserve
-usecase "View loan status or fines" as UC_Status
-usecase "Payment of a fine" as UC_PayFine
+' --- Узагальнення акторів (Вимога лаби) ---
+User <|-- Member
+User <|-- Librarian
 
-' === Shared Use Cases ===
-usecase "Authentication" as UC_Auth
+package "Система Бібліотеки (Спрощена)" {
 
-' === Payment Processing ===
-usecase "Payment processing" as UC_Payment
+    ' === Спільний Use Case ===
+    usecase "Автентифікація" as UC_Auth
 
-' === Librarian Use Cases ===
-usecase "New member registration" as UC_Register
-usecase "Member status check" as UC_MemberStatus
-usecase "Book issuance" as UC_Issuance
-usecase "Book reception (return operation)" as UC_Reception
-usecase "Data management" as UC_Data
-usecase "Account management" as UC_Account
-usecase "Report generation" as UC_Report
+    ' === Use Cases Читача ===
+    usecase "Перегляд каталогу" as UC_Catalog
+    usecase "Пошук книги" as UC_Search
+    usecase "Резервування книги" as UC_Reserve
+    usecase "Перегляд статусу/штрафів" as UC_Status
+    usecase "Сплата штрафу" as UC_PayFine
 
-' === Notification / Penalty ===
-usecase "Penalty assessment" as UC_Penalty
+    ' === Use Cases Бібліотекаря ===
+    usecase "Реєстрація читача" as UC_Register
+    usecase "Перевірка статусу читача" as UC_MemberStatus
+    usecase "Видача книги" as UC_Issuance
+    usecase "Прийом книги (повернення)" as UC_Reception
+    usecase "Керування даними (книги)" as UC_Data
+    usecase "Керування акаунтами" as UC_Account
+    usecase "Генерація звітів" as UC_Report
+    usecase "Нарахування штрафу" as UC_Penalty
+}
 
-' === Associations ===
-Member --> UC_Catalog 
+' === Асоціації Акторів ===
+Member --> UC_Catalog
 Member --> UC_Search
 Member --> UC_Reserve
 Member --> UC_Status
 Member --> UC_PayFine
-
-
-EPS --> UC_Payment
-UC_Payment ..> UC_PayFine : <<use>>
 
 Librarian --> UC_Register
 Librarian --> UC_Issuance
@@ -48,17 +61,35 @@ Librarian --> UC_Reception
 Librarian --> UC_Data
 Librarian --> UC_Account
 Librarian --> UC_Report
-Librarian --> UC_Auth
+Librarian --> UC_MemberStatus 
 
-NS --> UC_Penalty
+' === Зв'язки з Зовнішніми Системами ===
+UC_PayFine --> EPS : "Обробка платежу"
+UC_Penalty --> NS : "Надіслати сповіщення"
 
-' === Includes / Extends Relationships ===
-UC_Reserve --> UC_Search : <<extends>>
-UC_Penalty --> UC_Reception : <<extends>>
+' === Відношення Include / Extend (Вимога лаби) ===
 
-UC_Reserve ..> UC_Auth : <<use>>
-UC_Status ..> UC_Auth : <<use>>
-UC_Reception ..> UC_MemberStatus : <<use>>
-UC_Issuance ..> UC_Auth : <<use>>
+' -- Extend --
+' Прийом книги може бути розширений нарахуванням штрафу (якщо протерміновано)
+UC_Reception <.. UC_Penalty : <<extends>>
+' Пошук книги може бути розширений резервуванням
+UC_Search <.. UC_Reserve : <<extends>>
+
+
+' -- Include --
+' Багато дій вимагають автентифікації (входу в систему)
+UC_Reserve ..> UC_Auth : <<include>>
+UC_Status ..> UC_Auth : <<include>>
+UC_PayFine ..> UC_Auth : <<include>>
+
+UC_Register ..> UC_Auth : <<include>>
+UC_Data ..> UC_Auth : <<include>>
+UC_Account ..> UC_Auth : <<include>>
+UC_Report ..> UC_Auth : <<include>>
+UC_MemberStatus ..> UC_Auth : <<include>>
+
+' При видачі та прийомі книги, бібліотекар має перевірити статус читача
+UC_Issuance ..> UC_MemberStatus : <<include>>
+UC_Reception ..> UC_MemberStatus : <<include>>
 
 @enduml
