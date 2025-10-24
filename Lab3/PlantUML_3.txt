@@ -1,0 +1,48 @@
+@startuml LoanProcessSequenceDiagram (Simplified)
+actor Member
+actor Librarian
+
+participant "Library system" as LS
+participant "Loan service" as LNS
+participant "Member service" as MS
+database "Loan/Member DB" as LMDB
+database "Book DB" as BDB
+
+skinparam sequence {
+    LifeLineBorderColor black
+    ArrowColor black
+}
+
+autonumber
+
+Member -> Librarian : 1. requestBookLoan(readerId, bookTitle)
+Librarian -> LS : 2. enterReaderAndBookData(name, bookTitle)
+LS -> LNS : 3. processLoanRequest(userId, bookId)
+LNS -> MS : 4. readerService.checkStatus(userId)
+MS -> LMDB : 5.1 readerDB.getReaderData(userId)
+
+alt Status UNAVAILABLE
+    LMDB --> MS : 5.2 Status UNAVAILABLE
+    MS --> LNS : 6.1 LoanResult.REJECTED
+    LNS -> LS : 7. rejectLoan(reason)
+    LS -> Librarian : 8. displayRejectionReason(reason)
+    Librarian -> Member : 9. notifyReader(message)
+
+else Status AVAILABLE
+    LMDB --> MS : 5.3 Status AVAILABLE
+    MS --> LNS : 6.2 LoanResult.ACCEPTED
+    
+    LNS -> BDB : 10. bookDB.checkAvailability(bookId)
+    BDB --> LNS : 11. Status AVAILABLE
+    
+    LNS -> LMDB : 12. loanDB.createLoanRecord(loanDetails)
+    LMDB --> LNS : 13. loanDB.createLoanRecord(loanId)
+
+    LNS -> BDB : 14. bookService.updateStatus(bookCopyId, Status.ON_LOAN)
+    BDB --> LNS : 15. Status UPDATED
+    
+    LNS -> LS : 16. recordLoanSuccessful(loanId)
+    LS -> Librarian : 17. LoanConfirmation
+    Librarian -> Member : 18. handOverBook(book)
+end
+@enduml
