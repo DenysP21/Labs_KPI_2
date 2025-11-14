@@ -1,5 +1,4 @@
 @startuml
-' --- Налаштування стилю ---
 skinparam actorStyle awesome
 skinparam useCase {
     BackgroundColor #LightCyan
@@ -14,43 +13,33 @@ skinparam package {
 
 left to right direction
 
-' --- Актори ---
-actor "Користувач" as User <<abstract>>
 actor "Читач" as Member
 actor "Бібліотекар" as Librarian
-actor "Платіжна Система" as EPS <<system>>
-actor "Сервіс Сповіщень" as NS <<system>>
 
-' --- Узагальнення акторів (Вимога лаби) ---
-User <|-- Member
-User <|-- Librarian
-
-package "Система Бібліотеки (Спрощена)" {
-
-    ' === Спільний Use Case ===
-    usecase "Автентифікація" as UC_Auth
-
-    ' === Use Cases Читача ===
+package "Система Бібліотеки" {
     usecase "Перегляд каталогу" as UC_Catalog
     usecase "Пошук книги" as UC_Search
     usecase "Резервування книги" as UC_Reserve
-    usecase "Перегляд статусу/штрафів" as UC_Status
     usecase "Сплата штрафу" as UC_PayFine
+    usecase "Перегляд статусу/штрафів" as UC_Status
 
-    ' === Use Cases Бібліотекаря ===
-    usecase "Реєстрація читача" as UC_Register
+    usecase "Автентифікація" as UC_Auth
     usecase "Перевірка статусу читача" as UC_MemberStatus
+
+    usecase "Реєстрація читача" as UC_Register
     usecase "Видача книги" as UC_Issuance
     usecase "Прийом книги (повернення)" as UC_Reception
+    usecase "Нарахування штрафу" as UC_Penalty
+
     usecase "Керування даними (книги)" as UC_Data
     usecase "Керування акаунтами" as UC_Account
     usecase "Генерація звітів" as UC_Report
-    usecase "Нарахування штрафу" as UC_Penalty
+
+    UC_Auth -[hidden]right-> UC_MemberStatus
+    UC_Reception -[hidden]down-> UC_Data
 }
 
-' === Асоціації Акторів ===
 Member --> UC_Catalog
-Member --> UC_Search
 Member --> UC_Reserve
 Member --> UC_Status
 Member --> UC_PayFine
@@ -61,35 +50,23 @@ Librarian --> UC_Reception
 Librarian --> UC_Data
 Librarian --> UC_Account
 Librarian --> UC_Report
-Librarian --> UC_MemberStatus 
+Librarian --> UC_MemberStatus
 
-' === Зв'язки з Зовнішніми Системами ===
-UC_PayFine --> EPS : "Обробка платежу"
-UC_Penalty --> NS : "Надіслати сповіщення"
+UC_Reserve .up.> UC_Auth : <<include>>
+UC_Status .up.> UC_Auth : <<include>>
+UC_PayFine .up.> UC_Auth : <<include>>
 
-' === Відношення Include / Extend (Вимога лаби) ===
+UC_Register .down.> UC_Auth : <<include>>
+UC_Data .down.> UC_Auth : <<include>>
+UC_Account .down.> UC_Auth : <<include>>
+UC_Report .down.> UC_Auth : <<include>>
+UC_MemberStatus .down.> UC_Auth : <<include>>
 
-' -- Extend --
-' Прийом книги може бути розширений нарахуванням штрафу (якщо протерміновано)
+UC_Catalog <.. UC_Search : <<extends>>
+UC_Reserve .left.> UC_Catalog : <<include>>
+
 UC_Reception <.. UC_Penalty : <<extends>>
-' Пошук книги може бути розширений резервуванням
-UC_Search <.. UC_Reserve : <<extends>>
-
-
-' -- Include --
-' Багато дій вимагають автентифікації (входу в систему)
-UC_Reserve ..> UC_Auth : <<include>>
-UC_Status ..> UC_Auth : <<include>>
-UC_PayFine ..> UC_Auth : <<include>>
-
-UC_Register ..> UC_Auth : <<include>>
-UC_Data ..> UC_Auth : <<include>>
-UC_Account ..> UC_Auth : <<include>>
-UC_Report ..> UC_Auth : <<include>>
-UC_MemberStatus ..> UC_Auth : <<include>>
-
-' При видачі та прийомі книги, бібліотекар має перевірити статус читача
-UC_Issuance ..> UC_MemberStatus : <<include>>
-UC_Reception ..> UC_MemberStatus : <<include>>
+UC_Reception .right.> UC_MemberStatus : <<include>>
+UC_Issuance .left.> UC_MemberStatus : <<include>>
 
 @enduml
