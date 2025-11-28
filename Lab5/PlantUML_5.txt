@@ -1,0 +1,87 @@
+@startuml Library System
+
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam backgroundcolor white
+left to right direction
+
+skinparam component {
+    BackgroundColor #FEFECE
+    BorderColor #A80036
+    ArrowColor #A80036
+}
+skinparam package {
+    BackgroundColor #F3F3F3
+    BorderColor #666666
+}
+
+component "Client App" as Client
+
+package "Library System" {
+
+    component "API Gateway" as Gateway {
+        component "HTTP Router" as Http
+        component "GRPC Server" as Grpc
+    }
+
+    package "Modules Layer" {
+
+        package "Auth Module" {
+            component "Auth Controller" as AuthC
+            component "Auth Service" as AuthS
+            component "Auth Repository" as AuthR
+            
+            AuthC --> AuthS
+            AuthS --> AuthR
+        }
+
+        package "Catalog Module" {
+            component "Catalog Controller" as CatC
+            component "Catalog Service" as CatS
+            component "Catalog Repository" as CatR
+            
+            CatC --> CatS
+            CatS --> CatR
+        }
+
+        package "Circulation Module" {
+            component "Circulation Controller" as CircC
+            component "Circulation Service" as CircS
+            component "Circulation Repository" as CircR
+            
+            CircC --> CircS
+            CircS --> CircR
+        }
+    }
+
+    component "DB Connection Pool" as Pool
+
+} 
+
+database "PostgreSQL" as DB
+
+node "External Integrations" {
+    component "Payment Provider" as Payment
+}
+
+Client --> Http
+
+Http --> AuthC
+Http --> CatC
+Http --> CircC
+
+Grpc --> AuthC
+Grpc --> CatC
+Grpc --> CircC
+
+CircS ..> AuthS : uses
+CircS ..> CatS : uses
+
+CircS ..> Payment : " fines processing"
+
+AuthR --> Pool
+CatR --> Pool
+CircR --> Pool
+
+Pool --> DB
+@enduml
